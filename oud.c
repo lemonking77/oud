@@ -71,6 +71,11 @@ int main(int argc, char **argv)
             break;
         }
 
+        // Receive message and timeout if nothing
+        res = uart_recv(sp, buf_in, 255, NULL, 50);
+        buf_in[res] = '\0';
+        printf("%s", buf_in);
+
         r = fread(buf, 1, 16, in);
         // Send cmd
         cmd[3] = r;
