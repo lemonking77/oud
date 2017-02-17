@@ -25,13 +25,17 @@ static uint8_t buf_in[BUFFER_SIZE];
 static uint8_t buf2[BUFFER_SIZE / 2];
 #endif
 
-int main(void)
+int main(int argc, char **argv)
 {
     const char *LOG_TAG = "OUD";
     serial_port sp = NULL;
     int res;
     char buf[256];
     int cnt = 0;
+    FILE *in = stdin;
+    size_t r;
+    uint32_t size_r = 0;
+    const char *path = "./oud";
 
     fprintf(stdout, "Welcome - %s %s\n", __DATE__, __TIME__);
 
@@ -44,23 +48,33 @@ int main(void)
     uart_flush_input(sp, true);
     uart_set_speed(sp, 115200);
 
+#if 0
     // Test send
     const char *str = "Hello from " TTY_UART "\r\n";
     uart_send(sp, (uint8_t *)str, strlen(str), 0);
+#endif
+
+    if (*(argv + 1)) {
+        path = *(argv + 1);
+    }
+
+    in = fopen(path, "rb");
+    if (!in) {
+        printf("Fail to open %s\n", path);
+        return 1;
+    }
 
     while (1) {
-        // Test uart_recv
-        res = uart_recv(sp, buf_in, 255, NULL, 0);
-        buf_in[res] = '\0';
-
-        printf("%s\n", buf_in);
-        if (strcmp((char *)buf_in, "quit") == 0) {
+        if (feof(in) || ferror(in)) {
             break;
         }
+        r = fread(buf, 1, 16, in);
+        size_r += r;
+        uart_send(sp, (uint8_t *)buf, r, 0);
 
-        printf("...\n");
-        sprintf(buf, "Hello %d", cnt++);
-        uart_send(sp, (uint8_t *)buf, strlen(buf), 0);
+        res = uart_recv(sp, buf_in, 255, NULL, 0);
+        buf_in[res] = '\0';
+        printf("%s", buf_in);
     }
 
     uart_close(sp);
