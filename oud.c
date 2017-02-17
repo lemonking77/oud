@@ -16,7 +16,7 @@
 
 #define DEBUG               1
 
-#define TTY_UART            "/dev/ttyS2"
+#define TTY_UART            "/dev/tty.usbserial-A900fZZq"
 
 #define BUFFER_SIZE         256
 
@@ -47,7 +47,6 @@ int main(void)
     uart_send(sp, (uint8_t *)str, strlen(str), 0);
 
     while (1) {
-#if 1
         // Test uart_recv
         res = uart_recv(sp, buf_in, 255, NULL, 0);
         buf_in[res] = '\0';
@@ -56,37 +55,9 @@ int main(void)
         if (strcmp((char *)buf_in, "quit") == 0) {
             break;
         }
-#endif
-
-        /**
-         * Data format:
-         *
-         *   1    |    2     |     1     |     n     |
-         * --------------------------------------------
-         *  0x55  | cmd_size | cmd_code  |  cmd_data |
-         *
-         * Simulate with ascii, eg: "U03123"
-         */
-        int len = 0;
-
-        res = uart_receive(sp, buf_in, 1, NULL, 0);
-        printf("Heading: 0x%02x\n", buf_in[0]);
-
-        if (buf_in[0] == 0x55) {    // 0x55 => 'U'
-            res = uart_receive(sp, buf_in, 2, NULL, 0);
-#if 0 // ASCII
-            len = (hex2digit(buf_in[0]) << 8) | hex2digit(buf_in[1]);
-#else
-            len = (buf_in[0] << 8) | buf_in[1];
-#endif
-            printf("Size: 0x%02x %02x - %d\n", buf_in[0], buf_in[1], len);
-        }
-
-        if (len) {
-            res = uart_receive(sp, buf_in, len, NULL, 0);
-        }
 
         printf("...\n");
+        uart_send(sp, (uint8_t *)str, strlen(str), 0);
     }
 
     uart_close(sp);
