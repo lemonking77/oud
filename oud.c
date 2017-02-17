@@ -27,9 +27,11 @@ static uint8_t buf2[BUFFER_SIZE / 2];
 
 int main(void)
 {
-    const char *LOG_TAG = "IOD";
+    const char *LOG_TAG = "OUD";
     serial_port sp = NULL;
     int res;
+    char buf[256];
+    int cnt = 0;
 
     fprintf(stdout, "Welcome - %s %s\n", __DATE__, __TIME__);
 
@@ -57,7 +59,8 @@ int main(void)
         }
 
         printf("...\n");
-        uart_send(sp, (uint8_t *)str, strlen(str), 0);
+        sprintf(buf, "Hello %d", cnt++);
+        uart_send(sp, (uint8_t *)buf, strlen(buf), 0);
     }
 
     uart_close(sp);
