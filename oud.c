@@ -65,13 +65,30 @@ int main(int argc, char **argv)
     }
 
     while (1) {
+        uint8_t cmd[4] = { 0x55, 0xAA, 0x00, 16 };
+
         if (feof(in) || ferror(in)) {
             break;
         }
+
         r = fread(buf, 1, 16, in);
+        // Send cmd
+        cmd[3] = r;
+        uart_send(sp, (uint8_t *)cmd, sizeof(cmd), 0);
+
+        // Wait for ACK
+        res = uart_recv(sp, buf_in, 255, NULL, 0);
+        if (!(buf_in[0] == 0x55 && buf_in[1] == 0xAA)) {
+            // Invalid ACK
+            // Continue to resend cmd
+            continue;
+        }
+
+        // Send data
         size_r += r;
         uart_send(sp, (uint8_t *)buf, r, 0);
 
+        // Receive feedback
         res = uart_recv(sp, buf_in, 255, NULL, 0);
         buf_in[res] = '\0';
         printf("%s", buf_in);
