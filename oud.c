@@ -64,6 +64,9 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    // Skip first 2 bytes
+    r = fread(buf, 1, 2, in);
+
     while (1) {
         uint8_t cmd[4] = { 0x55, 0xAA, 0x00, 16 };
 
@@ -71,10 +74,12 @@ int main(int argc, char **argv)
             break;
         }
 
+#if 1
         // Receive message and timeout if nothing
         res = uart_recv(sp, buf_in, 255, NULL, 50);
         buf_in[res] = '\0';
         printf("%s", buf_in);
+#endif
 
         r = fread(buf, 1, 16, in);
         // Send cmd
@@ -99,6 +104,7 @@ int main(int argc, char **argv)
         printf("%s", buf_in);
     }
 
+    fclose(in);
     uart_close(sp);
 
     return 0;
